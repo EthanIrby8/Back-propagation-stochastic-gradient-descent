@@ -1,0 +1,107 @@
+% Standardize input patterns
+% x1 and x2 store 2x100 matrices containing random initialized values
+x = [x1,x2];
+t1 = [1;-1]*ones(1,100);
+t2 = [-1;1]*ones(1,100);
+t = [t1,t2];
+vec = 0;
+for i = 1:200
+    vec = vec + x(:,i)-mean(x,2).*x(:,i)-mean(x,2);
+end
+stdx = vec/200;
+x = (x-mean(x,2))./stdx;
+
+for j = 1:200
+    x1norm = (x(1,:) - mean(x(1,:)))./std(x(1,:));  
+    x2norm = (x(2,:) - mean(x(2,:)))./std(x(2,:)); 
+end
+X = [x1norm;x2norm];
+
+theta = 0.1;
+step = 0.1;
+Nh = 10;
+Ni = 2;
+No = 2;
+a = 1.716;
+b = 2/3;
+
+ints = round(rand()*199)+1;
+
+% initialize weights
+aa = -(0.2)^-0.5;
+bb = (0.2)^-0.5;
+cc = -(5)^-0.5;
+dd = (5)^-0.5;
+wji = (bb - aa).* rand(Nh,3) + aa;
+wkj = (dd - cc).* rand(No,11) + cc;
+% choose random vector
+randvector = randperm(200,1);
+trainsample = X(:,randvector);
+randtarget = t(:,randvector);
+% calculate netj
+x_o = 1;
+net_j = wji*[x_o;test4];
+% calculate hidden output node Y
+Y = a*tanh(b*net_j);
+% calculate netk
+y_o = 1;
+net_k = wkj * [y_o;Y];
+% calculate Z
+Z = a*tanh(b*net_k); 
+
+% calculate first derivatives of activation functions
+fnetprimek = a*b*sech(b*net_k);
+fnetprimej = a*b*sech(b*net_j);
+% calculate sensitivities
+delta_k = (t(randvector)-Z(No)).*fnetprimek;
+delta_j = sum((delta_k * wkj(Nh))).*fnetprimej;
+% update weights
+deltawkj = (step.*delta_k)*[y_o;Y]';
+deltawji = (step.*delta_j)*[x_o;trainsample]';
+% total training error
+J = 0.5*(t(randvector) - Z(No))^2;
+
+
+newx_o = ones(1,200);
+newy_o = ones(1,200);
+
+
+iter = 0;
+update_wji = theta + 1;
+update_wkj = theta + 1;
+
+while sqrt(update_wji'*update_wji)>theta
+    iter = iter + 1,
+    randvector = randperm(200,1);
+    trainsample = X(:,randvector);
+    randtarget = t(:,randvector);
+    net_j = wji*[x_o;trainsample];
+    Y = a*tanh(b*net_j);
+    net_k = wkj * [y_o;Y];
+    Z = a*tanh(b*net_k);
+    fnetprimej = a*b*sech(b*net_j);
+    fnetprimek = a*b*sech(b*net_k);
+    delta_k=(t(randvector)-Z).*fnetprimek;
+    delta_j = sum((delta_k * wkj(Nh))).*fnetprimej;
+    update_wji = (step.*delta_j)*[x_o;trainsample]';
+    
+    wji = wji + update_wji,
+end
+
+while sqrt(update_wkj'*update_wkj)>theta
+    iter = iter + 1,
+    randvector = randperm(200,1);
+    trainsample = X(:,randvector);
+    randtarget = t(:,randvector);
+    net_j = wji*[x_o;trainsample];
+    Y = a*tanh(b*net_j);
+    net_k = wkj * [y_o;Y];
+    Z = a*tanh(b*net_k);
+    fnetprimej = a*b*sech(b*net_j);
+    fnetprimek = a*b*sech(b*net_k);
+    delta_k=(t(randvector)-Z).*fnetprimek;
+    delta_j = sum((delta_k * wkj(Nh))).*fnetprimej;
+    update_wkj = (step.*delta_k)*[y_o;Y]';
+        
+    wkj = wkj + update_wkj, 
+end

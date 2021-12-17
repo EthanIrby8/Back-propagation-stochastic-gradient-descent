@@ -1,2 +1,2 @@
 # Back-propagation-stochastic-gradient-descent
-Implementing back-propagation algorithm with stochastic gradient descent from scratch in MATLAB.
+Implementation of the backpropagation algorithm with stochastic gradient descent in MATLAB.
